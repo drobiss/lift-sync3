@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { db, auth } from "../firebase/firebase"; // Import auth
+import { db, auth } from "../firebase/firebase"; 
 import { deleteDoc, doc } from "firebase/firestore";
 import {
   collection,
@@ -8,7 +8,8 @@ import {
   onSnapshot,
   orderBy,
   serverTimestamp,
-  where // Import where pro filtrování dat podle uživatele
+  where,
+  getDocs // Přidáno pro alternativní způsob načítání dat
 } from "firebase/firestore";
 
 const Home = () => {
@@ -18,6 +19,7 @@ const Home = () => {
   const [entries, setEntries] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
+  const [debug, setDebug] = useState(""); // Přidáno pro debugování
   
   // Form data states
   const [exercise, setExercise] = useState("");
@@ -29,6 +31,14 @@ const Home = () => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
       setCurrentUser(user);
+      // Debug info
+      if (user) {
+        console.log("User ID:", user.uid);
+        setDebug(`User authenticated: ${user.uid.substring(0, 6)}...`);
+      } else {
+        console.log("No user logged in");
+        setDebug("No user authenticated");
+      }
     });
     
     return () => unsubscribe();
@@ -48,24 +58,80 @@ const Home = () => {
     
     if (!currentUser) {
       console.error("No user logged in");
+      setDebug("Chyba: Nepřihlášený uživatel");
       return;
     }
     
     if (exercise.trim() === "") return;
 
     try {
-      await addDoc(collection(db, "entries"), {
+      // Debug info před přidáním záznamu
+      console.log("Adding exercise with userId:", currentUser.uid);
+      
+      const docRef = await addDoc(collection(db, "entries"), {
         exercise,
         weight: weight ? Number(weight) : 0,
         sets: sets ? Number(sets) : 0,
         reps: reps ? Number(reps) : 0,
         createdAt: serverTimestamp(),
-        userId: currentUser.uid // Přidání userId k záznamu
+        userId: currentUser.uid
       });
+      
+      console.log("Document added with ID:", docRef.id);
+      setDebug(`Cvičení přidáno: ${exercise} (ID: ${docRef.id.substring(0, 6)}...)`);
+      
       resetForm();
       setShowForm(false);
+      
+      // Okamžitě načíst data znovu (alternativní přístup)
+      fetchData();
+      
     } catch (err) {
       console.error("Error saving exercise:", err);
+      setDebug(`Chyba při ukládání: ${err.message}`);
+    }
+  };
+
+  // Funkce pro manuální načtení dat (alternativní k onSnapshot)
+  const fetchData = async () => {
+    if (!currentUser) return;
+    
+    setIsLoading(true);
+    try {
+      console.log("Fetching data for userId:", currentUser.uid);
+      
+      // ZMĚNA 1: Nejprve zkusíme načíst data pouze s where, bez orderBy
+      const q = query(
+        collection(db, "entries"),
+        where("userId", "==", currentUser.uid)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const newEntries = [];
+      
+      querySnapshot.forEach((doc) => {
+        console.log("Document data:", doc.data());
+        newEntries.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      console.log(`Found ${newEntries.length} entries`);
+      setDebug(`Načteno ${newEntries.length} záznamů`);
+      
+      // Řadíme manuálně (obejití problému s orderBy)
+      newEntries.sort((a, b) => {
+        if (!a.createdAt || !b.createdAt) return 0;
+        return b.createdAt.seconds - a.createdAt.seconds;
+      });
+      
+      setEntries(newEntries);
+    } catch (err) {
+      console.error("Error fetching exercises:", err);
+      setDebug(`Chyba při načítání dat: ${err.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -73,8 +139,13 @@ const Home = () => {
   const handleDelete = async (id) => {
     try {
       await deleteDoc(doc(db, "entries", id));
+      setDebug(`Záznam smazán: ${id.substring(0, 6)}...`);
+      
+      // Okamžitě načíst data znovu (alternativní přístup)
+      fetchData();
     } catch (err) {
       console.error("Error deleting exercise:", err);
+      setDebug(`Chyba při mazání: ${err.message}`);
     }
   };
 
@@ -82,13 +153,14 @@ const Home = () => {
   const handleLogout = async () => {
     try {
       await auth.signOut();
-      // Při odhlášení budete přesměrováni na přihlašovací stránku díky App.jsx
+      setDebug("Uživatel odhlášen");
     } catch (error) {
       console.error("Error signing out:", error);
+      setDebug(`Chyba při odhlášení: ${error.message}`);
     }
   };
 
-  // Load data in real-time - only for the current user
+  // ZMĚNA 2: Použijeme manuální načítání dat místo onSnapshot
   useEffect(() => {
     if (!currentUser) {
       setEntries([]);
@@ -96,33 +168,66 @@ const Home = () => {
       return;
     }
 
-    setIsLoading(true);
+    fetchData();
     
-    // Upravená query, která načítá pouze záznamy patřící aktuálnímu uživateli
-    const q = query(
-      collection(db, "entries"),
-      where("userId", "==", currentUser.uid),
-      orderBy("createdAt", "desc")
-    );
-    
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const newEntries = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setEntries(newEntries);
-        setIsLoading(false);
-      },
-      (error) => {
-        console.error("Error fetching exercises:", error);
-        setIsLoading(false);
-      }
-    );
+    // Pro jistotu ponecháme i onSnapshot, ale s upraveným dotazem
+    try {
+      console.log("Setting up real-time listener");
+      
+      // Pokusíme se nejprve bez orderBy
+      const q = query(
+        collection(db, "entries"),
+        where("userId", "==", currentUser.uid)
+        // orderBy odstraněn pro zjednodušení dotazu
+      );
+      
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          console.log(`Snapshot received with ${snapshot.docs.length} docs`);
+          
+          const newEntries = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          
+          // Řadíme manuálně
+          newEntries.sort((a, b) => {
+            if (!a.createdAt || !b.createdAt) return 0;
+            return b.createdAt.seconds - a.createdAt.seconds;
+          });
+          
+          setEntries(newEntries);
+          setIsLoading(false);
+          setDebug(`Real-time aktualizace: ${newEntries.length} záznamů`);
+        },
+        (error) => {
+          console.error("Error in snapshot listener:", error);
+          setDebug(`Chyba v real-time listeneru: ${error.message}`);
+          setIsLoading(false);
+          // Pokud real-time listener selže, zkusíme alespoň načíst data jednorázově
+          fetchData();
+        }
+      );
 
-    return () => unsubscribe();
-  }, [currentUser]); // Závislost na currentUser zajistí, že se data načtou znovu při změně uživatele
+      return () => {
+        console.log("Unsubscribing from real-time listener");
+        unsubscribe();
+      };
+    } catch (err) {
+      console.error("Error setting up snapshot listener:", err);
+      setDebug(`Chyba při nastavení listeneru: ${err.message}`);
+      setIsLoading(false);
+      // Pokud real-time listener selže, zkusíme alespoň načíst data jednorázově
+      fetchData();
+    }
+  }, [currentUser]);
+
+  // Přidaný handler pro manuální obnovení dat
+  const handleRefresh = () => {
+    setDebug("Manuální obnovení dat...");
+    fetchData();
+  };
 
   // Filter entries
   const filteredEntries = entries.filter(entry => 
@@ -132,7 +237,7 @@ const Home = () => {
   return (
     <div className="p-4 max-w-md mx-auto relative min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-2">
         <h1 className="text-2xl font-bold text-gray-800">Workout Tracker</h1>
         
         {/* Zobrazení informací o uživateli a tlačítko pro odhlášení */}
@@ -148,6 +253,19 @@ const Home = () => {
           </div>
         )}
       </div>
+      
+      {/* Debug info */}
+      {debug && (
+        <div className="mb-4 text-xs bg-gray-100 p-2 rounded-md flex justify-between">
+          <div className="text-gray-600">{debug}</div>
+          <button 
+            onClick={handleRefresh} 
+            className="text-blue-500 hover:text-blue-700"
+          >
+            Obnovit
+          </button>
+        </div>
+      )}
 
       {/* Search and Add Button */}
       <div className="flex items-center gap-3 mb-6">
