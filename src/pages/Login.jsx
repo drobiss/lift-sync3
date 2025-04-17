@@ -25,7 +25,7 @@ const Login = () => {
     
     try {
       await signInWithEmailAndPassword(auth, email, password)
-      // onLogin is no longer needed - App.jsx will detect auth state change
+      
     } catch (err) {
       console.error("Login error:", err)
       if (err.code === 'auth/invalid-credential') {
