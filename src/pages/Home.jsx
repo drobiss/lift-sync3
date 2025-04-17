@@ -222,7 +222,9 @@ const Home = () => {
             
             <button 
               onClick={handleLogout}
-              className="font-semibold text-sm bg-blue-500 border-blue-500 px-3 py-1 rounded"
+              className="font-medium text-sm text-white bg-blue-500 hover:bg-blue-700 
+              px-4 py-2 rounded-md shadow-sm transition-all duration-200 
+              border border-blue-700 hover:shadow active:scale-98"
             >
               Logout
             </button>
