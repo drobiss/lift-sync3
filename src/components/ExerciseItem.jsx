@@ -1,18 +1,27 @@
 const ExerciseItem = ({ entry, onDelete }) => {
+  
   return (
+    <>
+    {/* Exercise name */}
     <div className="bg-gray-800 rounded-lg shadow-md p-4 border-l-4 border-blue-500">
       <div className="flex justify-between items-start">
         <div>
           <h3 className="font-bold text-lg text-gray-100">{entry.exercise}</h3>
           <div className="flex gap-4 mt-2 text-gray-400">
+            {/* Exercise weight */}
             {entry.weight > 0 && (
               <div className="flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14M5 12h14" />
+                  <path d="M6 9V15" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+                  <path d="M18 9V15" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+                  <path d="M3 10V14" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+                  <path d="M21 10V14" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+                  <path d="M3 12H21" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
                 </svg>
                 <span>{entry.weight} kg</span>
               </div>
             )}
+            {/* Exeercise sets */}
             {entry.sets > 0 && (
               <div className="flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -21,6 +30,7 @@ const ExerciseItem = ({ entry, onDelete }) => {
                 <span>{entry.sets} sets</span>
               </div>
             )}
+            {/* Exercise reps */}
             {entry.reps > 0 && (
               <div className="flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,7 +40,8 @@ const ExerciseItem = ({ entry, onDelete }) => {
               </div>
             )}
           </div>
-          {/* Zobrazení data přidání */}
+
+          {/* Exercise date */}
           {entry.createdAt && (
             <div className="text-xs text-gray-400 mt-2">
               <div className="flex items-center">
@@ -50,6 +61,7 @@ const ExerciseItem = ({ entry, onDelete }) => {
             </div>
           )}
         </div>
+        {/* Delete button */}
         <button
           onClick={() => onDelete(entry.id)}
           className="text-gray-400 hover:text-red-500 transition-colors"
@@ -58,8 +70,10 @@ const ExerciseItem = ({ entry, onDelete }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
         </button>
+
       </div>
     </div>
+    </>
   );
 };
 
