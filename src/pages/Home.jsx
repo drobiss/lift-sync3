@@ -306,7 +306,7 @@ const Home = () => {
         <div className="mt-3 relative">
           <input
             type="text"
-            placeholder="Hledat cviky..."
+            placeholder="Search exercise..."
             className="w-full py-2 pl-4 pr-10 rounded-full border text-gray-400 bg-gray-800 border-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}

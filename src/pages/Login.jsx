@@ -44,7 +44,7 @@ const Login = () => {
     <div className="flex flex-col justify-center items-center h-screen bg-gray-900 px-6">
       {/* Title */}
       <div className="mb-8 text-center">
-        <h2 className="text-3xl font-bold text-white tracking-tight">LiftSync</h2>
+        <h2 className="text-3xl font-bold text-white tracking-tight">Lift<span className="text-blue-500">Sync</span></h2>
         <p className="text-gray-400 mt-1">Track your progress</p>
       </div>
       
