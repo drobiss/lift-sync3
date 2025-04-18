@@ -23,7 +23,7 @@ const BottomNavigation = ({ onAddClick }) => {
       <div className="h-4 bg-gradient-to-t from-gray-800 to-transparent"></div>
       
       {/* Hlavní navigační panel */}
-      <div className="bg-gray-800 backdrop-blur-lg bg-opacity-95 border-t border-gray-700 rounded-t-xl px-4 pt-1 pb-6 flex justify-around items-center shadow-xl">
+      <div className="bg-gray-800 backdrop-blur-lg bg-opacity-95 border-t border-gray-700 rounded-t-xl px-4 pt-1 pb-1 flex justify-around items-center shadow-xl">
         {/* Home Button */}
         <button 
           onClick={() => handleTabClick('home')}
