@@ -11,7 +11,7 @@ import {
   getDocs
 } from "firebase/firestore";
 import ExerciseForm from "../components/ExerciseForm";
-import ExerciseItem from "../components/ExerciseItem";
+import ExerciseGroupCard from "../components/ExerciseGroupCard";
 import BottomNavigation from "../components/BottomNavigation";
 
 const Home = () => {
@@ -101,12 +101,6 @@ const Home = () => {
       console.log(`Found ${newEntries.length} entries`);
       setDebug(`Loaded ${newEntries.length} records`);
       
-      // Manually sorting
-      newEntries.sort((a, b) => {
-        if (!a.createdAt || !b.createdAt) return 0;
-        return b.createdAt.seconds - a.createdAt.seconds;
-      });
-      
       setEntries(newEntries);
     } catch (err) {
       console.error("Error fetching exercises:", err);
@@ -170,12 +164,6 @@ const Home = () => {
             ...doc.data()
           }));
           
-          // Sort manually
-          newEntries.sort((a, b) => {
-            if (!a.createdAt || !b.createdAt) return 0;
-            return b.createdAt.seconds - a.createdAt.seconds;
-          });
-          
           setEntries(newEntries);
           setIsLoading(false);
           setDebug(`Real-time updates: ${newEntries.length} records`);
@@ -206,10 +194,78 @@ const Home = () => {
     fetchData();
   };
 
+  // Group entries by exercise name
+  const groupEntriesByExercise = (entries) => {
+    const groups = {};
+    
+    entries.forEach(entry => {
+      const exerciseName = entry.exercise;
+      
+      if (!groups[exerciseName]) {
+        groups[exerciseName] = [];
+      }
+      
+      groups[exerciseName].push(entry);
+    });
+    
+    return groups;
+  };
+
   // Filter entries
-  const filteredEntries = entries.filter(entry => 
-    entry.exercise.toLowerCase().includes(filter.toLowerCase())
-  );
+  const filterExerciseGroups = (groups) => {
+    if (!filter) return groups;
+    
+    const filteredGroups = {};
+    Object.keys(groups).forEach(exerciseName => {
+      if (exerciseName.toLowerCase().includes(filter.toLowerCase())) {
+        filteredGroups[exerciseName] = groups[exerciseName];
+      }
+    });
+    
+    return filteredGroups;
+  };
+  
+  // Get unique exercise names for autocomplete
+  const getUniqueExerciseNames = () => {
+    const names = new Set();
+    entries.forEach(entry => {
+      if (entry.exercise) {
+        names.add(entry.exercise);
+      }
+    });
+    return Array.from(names);
+  };
+  
+  // Group entries by exercise name
+  const exerciseGroups = groupEntriesByExercise(entries);
+  
+  // Apply filter
+  const filteredGroups = filterExerciseGroups(exerciseGroups);
+  
+  // Sort groups by the date of the most recent entry
+  const sortedGroupNames = Object.keys(filteredGroups).sort((a, b) => {
+    const entriesA = filteredGroups[a];
+    const entriesB = filteredGroups[b];
+    
+    // Find the most recent entry in each group
+    const latestA = entriesA.reduce((latest, entry) => {
+      if (!latest || !latest.createdAt) return entry;
+      if (!entry.createdAt) return latest;
+      return entry.createdAt.seconds > latest.createdAt.seconds ? entry : latest;
+    }, null);
+    
+    const latestB = entriesB.reduce((latest, entry) => {
+      if (!latest || !latest.createdAt) return entry;
+      if (!entry.createdAt) return latest;
+      return entry.createdAt.seconds > latest.createdAt.seconds ? entry : latest;
+    }, null);
+    
+    // Compare dates
+    if (!latestA?.createdAt) return 1;
+    if (!latestB?.createdAt) return -1;
+    
+    return latestB.createdAt.seconds - latestA.createdAt.seconds;
+  });
   
   // Handle adding exercise from bottom nav
   const handleAddClick = () => {
@@ -250,7 +306,7 @@ const Home = () => {
         <div className="mt-3 relative">
           <input
             type="text"
-            placeholder="Search exercises..."
+            placeholder="Hledat cviky..."
             className="w-full py-2 pl-4 pr-10 rounded-full border text-gray-400 bg-gray-800 border-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
@@ -279,18 +335,19 @@ const Home = () => {
           </div>
         ) : !currentUser ? (
           <div className="text-center py-10 text-gray-500">
-            You're not logged in
+            Nejste přihlášeni
           </div>
-        ) : filteredEntries.length === 0 ? (
+        ) : sortedGroupNames.length === 0 ? (
           <div className="text-center py-10 text-gray-500">
-            {filter ? "No exercises found matching your search" : "No exercises added yet"}
+            {filter ? "Nenalezeny žádné cviky odpovídající vašemu vyhledávání" : "Zatím nebyly přidány žádné cviky"}
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredEntries.map((entry) => (
-              <ExerciseItem 
-                key={entry.id} 
-                entry={entry} 
+            {sortedGroupNames.map((exerciseName) => (
+              <ExerciseGroupCard 
+                key={exerciseName}
+                exerciseName={exerciseName}
+                entries={filteredGroups[exerciseName]}
                 onDelete={handleDelete}
               />
             ))}
@@ -299,13 +356,14 @@ const Home = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <BottomNavigation onAddClick={() => setShowForm(true)} />
+      <BottomNavigation onAddClick={handleAddClick} />
 
       {/* Add Exercise Modal */}
       {showForm && (
         <ExerciseForm 
           onSubmit={handleAdd}
           onClose={() => setShowForm(false)}
+          existingExercises={getUniqueExerciseNames()}
         />
       )}
     </div>
