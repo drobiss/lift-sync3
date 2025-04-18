@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import ExerciseForm from "../components/ExerciseForm";
 import ExerciseItem from "../components/ExerciseItem";
+import BottomNavigation from "../components/BottomNavigation";
 
 const Home = () => {
   // States for form data and UI control
@@ -209,49 +210,48 @@ const Home = () => {
   const filteredEntries = entries.filter(entry => 
     entry.exercise.toLowerCase().includes(filter.toLowerCase())
   );
+  
+  // Handle adding exercise from bottom nav
+  const handleAddClick = () => {
+    setShowForm(true);
+  };
 
   return (
-    <div className="p-4 max-w-md mx-auto relative min-h-screen bg-gray-900">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-10">
-        <h1 className="text-2xl font-bold text-gray-100">Progress Tracker</h1>
+    <div className="flex flex-col h-screen bg-gray-900">
+      {/* Fixed Header */}
+      <div className="px-4 pt-4 pb-2 bg-gray-900 shadow-md">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-100">LiftSync</h1>
+          
+          <button 
+            onClick={handleLogout}
+            className="text-sm text-gray-400 hover:text-gray-200"
+          >
+            Logout
+          </button>
+        </div>
         
-        {/* View user information and logout button */}
-        {currentUser && (
-          <div className="flex items-center">
-            
+        {/* Debug info - collapsible */}
+        {debug && (
+          <div className="mt-2 text-xs bg-gray-800 p-2 rounded-md flex justify-between">
+            <div className="text-gray-400 truncate">{debug}</div>
             <button 
-              onClick={handleLogout}
-              className="font-medium text-sm text-white bg-blue-500 hover:bg-blue-700 
-              px-4 py-2 rounded-md shadow-sm transition-all duration-200 
-              border border-blue-700 hover:shadow active:scale-98"
+              onClick={handleRefresh} 
+              className="text-blue-500 hover:text-blue-700 ml-2 flex-shrink-0"
             >
-              Logout
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
             </button>
           </div>
         )}
-      </div>
-      
-      {/* Debug info */}
-      {debug && (
-        <div className="my-5 text-xs bg-gray-800 p-3 rounded-md flex justify-between">
-          <div className="text-gray-400">{debug}</div>
-          <button 
-            onClick={handleRefresh} 
-            className="text-blue-500 hover:text-blue-700"
-          >
-            Refresh
-          </button>
-        </div>
-      )}
-
-      {/* Search and Add Button */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="relative flex-1">
+        
+        {/* Search */}
+        <div className="mt-3 relative">
           <input
             type="text"
             placeholder="Search exercises..."
-            className="w-full py-2 pl-4 pr-10 rounded-full border text-gray-400 bg-gray-900 border-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            className="w-full py-2 pl-4 pr-10 rounded-full border text-gray-400 bg-gray-800 border-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
@@ -269,50 +269,37 @@ const Home = () => {
             />
           </svg>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-700"
-        >
-          <svg 
-            className="w-6 h-6 text-white" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M12 6v6m0 0v6m0-6h6m-6 0H6" 
-            />
-          </svg>
-        </button>
       </div>
 
-      {/* Exercise List */}
-      {isLoading ? (
-        <div className="flex justify-center mt-10">
-          <div className="loader w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      ) : !currentUser ? (
-        <div className="text-center py-10 text-gray-500">
-          You're not logged in
-        </div>
-      ) : filteredEntries.length === 0 ? (
-        <div className="text-center py-10 text-gray-500">
-          {filter ? "No exercises found matching your search" : "No exercises added yet"}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredEntries.map((entry) => (
-            <ExerciseItem 
-              key={entry.id} 
-              entry={entry} 
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-      )}
+      {/* Scrollable Exercise List */}
+      <div className="flex-1 overflow-y-auto px-4 pb-24 pt-4">
+        {isLoading ? (
+          <div className="flex justify-center mt-10">
+            <div className="loader w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : !currentUser ? (
+          <div className="text-center py-10 text-gray-500">
+            You're not logged in
+          </div>
+        ) : filteredEntries.length === 0 ? (
+          <div className="text-center py-10 text-gray-500">
+            {filter ? "No exercises found matching your search" : "No exercises added yet"}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredEntries.map((entry) => (
+              <ExerciseItem 
+                key={entry.id} 
+                entry={entry} 
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Navigation */}
+      <BottomNavigation onAddClick={() => setShowForm(true)} />
 
       {/* Add Exercise Modal */}
       {showForm && (
