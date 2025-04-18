@@ -277,7 +277,7 @@ const Home = () => {
       {/* Fixed Header */}
       <div className="px-4 pt-4 pb-2 bg-gray-900 shadow-md">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-100">LiftSync</h1>
+          <h1 className="text-2xl font-bold text-gray-100">Lift<span className="text-blue-500">Sync</span></h1>
           
           <button 
             onClick={handleLogout}
