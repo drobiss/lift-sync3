@@ -62,7 +62,7 @@ const BottomNavigation = ({ onAddClick }) => {
         {/* Add Button - upravená verze */}
         <button 
           onClick={() => handleTabClick('add')}
-          className="p-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white flex justify-center items-center -mt-5 shadow-lg hover:shadow-blue-500/20 active:scale-95 transition-all duration-300"
+          className="p-2 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white flex justify-center items-center -mt-1 shadow-lg hover:shadow-blue-500/20 active:scale-95 transition-all duration-300"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
