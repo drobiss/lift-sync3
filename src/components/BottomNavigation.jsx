@@ -20,7 +20,7 @@ const BottomNavigation = ({ onAddClick }) => {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
       {/* Stínový efekt na horní hraně */}
-      <div className="h-4 bg-gradient-to-t from-gray-800 to-transparent"></div>
+     
       
       {/* Hlavní navigační panel */}
       <div className="bg-gray-800 backdrop-blur-lg bg-opacity-95 border-t border-gray-700 rounded-t-xl px-4 pt-1 pb-1 flex justify-around items-center shadow-xl">
