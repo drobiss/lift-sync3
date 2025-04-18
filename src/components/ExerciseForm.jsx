@@ -61,7 +61,7 @@ const ExerciseForm = ({ onSubmit, onClose, existingExercises = [] }) => {
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-end justify-center z-50 p-4 animate-fadeIn">
       <div className="bg-gray-800 rounded-t-xl w-full max-w-md p-5 shadow-lg animate-slideUp">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-100">Přidat cvik</h2>
+          <h2 className="text-xl font-bold text-gray-100">Add lift</h2>
           <button 
             onClick={onClose}
             className="text-gray-400 hover:text-gray-200"
@@ -78,7 +78,7 @@ const ExerciseForm = ({ onSubmit, onClose, existingExercises = [] }) => {
         <form onSubmit={handleSubmit}>
           <div className="mb-4 relative">
             <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="exercise">
-              Název cviku*
+            Exercise name*
             </label>
             <input
               id="exercise"
@@ -117,7 +117,7 @@ const ExerciseForm = ({ onSubmit, onClose, existingExercises = [] }) => {
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div>
               <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="weight">
-                Váha (kg)
+                Weight (kg)
               </label>
               <input
                 id="weight"
@@ -132,7 +132,7 @@ const ExerciseForm = ({ onSubmit, onClose, existingExercises = [] }) => {
             
             <div>
               <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="sets">
-                Série
+                Set
               </label>
               <input
                 id="sets"
@@ -147,7 +147,7 @@ const ExerciseForm = ({ onSubmit, onClose, existingExercises = [] }) => {
             
             <div>
               <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="reps">
-                Opakování
+                Repetition
               </label>
               <input
                 id="reps"
@@ -167,13 +167,13 @@ const ExerciseForm = ({ onSubmit, onClose, existingExercises = [] }) => {
               onClick={onClose}
               className="px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
-              Zrušit
+              Cancel
             </button>
             <button
               type="submit"
               className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
             >
-              Uložit
+              Save
             </button>
           </div>
         </form>
